@@ -49,10 +49,7 @@ public class MyDispatcherServlet extends HttpServlet {
             doLoadConfig(config.getInitParameter("contextConfigLocation"));
             scanPackage(properties.get("scanPackage").toString().replaceAll("\\.", "/"));//解析配置文件
             doInstance();//反射类
-            //注入
-            ico();
-
-
+            ico(); //注入
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
