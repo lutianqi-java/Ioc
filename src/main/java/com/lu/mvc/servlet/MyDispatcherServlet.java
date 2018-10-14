@@ -1,5 +1,6 @@
 package com.lu.mvc.servlet;
 
+import com.lu.mvc.annotation.MyAutowired;
 import com.lu.mvc.annotation.MyController;
 import com.lu.mvc.annotation.MyService;
 
@@ -56,20 +57,37 @@ public class MyDispatcherServlet extends HttpServlet {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 
-    private void ico() {
+    /**
+     * Ico 注入
+     * @throws IllegalAccessException
+     */
+    private void ico() throws IllegalAccessException {
         for (Map.Entry<String, Class> entry : classMap.entrySet()) {
-            Class classInstance = entry.getValue();
-            Field[] fields = classInstance.getFields();
-            for (Field field : fields) {
-
+            Field fields[] = entry.getValue().getClass().getDeclaredFields();
+            if (fields == null) {
+                continue;
             }
-
+            for (Field field : fields) {
+                field.setAccessible(true);
+                String key;
+                if (field.isAnnotationPresent(MyAutowired.class)) {
+                    MyAutowired myAutowired = field.getAnnotation(MyAutowired.class);
+                    String autowired = myAutowired.value();
+                    if (autowired != null && !"".equals(autowired)) {
+                        key = autowired;
+                    } else {
+                        key = field.getName();
+                    }
+                    field.set(entry.getValue(),classMap.get(key));
+                }
+                log.info(field.getName());
+            }
         }
-
-
     }
 
     private void doInstance() throws ClassNotFoundException {
