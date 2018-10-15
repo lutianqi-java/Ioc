@@ -1,9 +1,12 @@
 package com.lu.mvc.servlet;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.lu.mvc.annotation.MyAutowired;
 import com.lu.mvc.annotation.MyController;
 import com.lu.mvc.annotation.MyRequestMapping;
 import com.lu.mvc.annotation.MyService;
+import com.lu.mvc.core.freemarkMap;
 import com.lu.test.service.TestService;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -46,7 +49,7 @@ public class MyDispatcherServlet extends HttpServlet {
     /**
      * 请求路径对应class 实例映射
      */
-    private Map<String, Class> handlerMappingMap = new HashMap<>();
+    private Map<String, Object> handlerMappingMap = new HashMap<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,15 +64,25 @@ public class MyDispatcherServlet extends HttpServlet {
         }
     }
 
-    private void dispatcher(HttpServletRequest req, HttpServletResponse resp, String type) throws InvocationTargetException, IllegalAccessException, InstantiationException {
-        String content = req.getContextPath();
-        String requestUrl = req.getRequestURI();
-
+    private void dispatcher(HttpServletRequest request, HttpServletResponse response, String type) throws InvocationTargetException, IllegalAccessException, InstantiationException, IOException {
+        String content = request.getContextPath();
+        String requestUrl = request.getRequestURI();
         requestUrl.replace(content, "");
-
         if (methodMap.containsKey(requestUrl)) {
             Method method = methodMap.get(requestUrl);
-            method.invoke(handlerMappingMap.get(requestUrl), null);
+
+            Class<?>[] parameterTypes = method.getParameterTypes();
+
+
+            Object invoke = method.invoke(handlerMappingMap.get(requestUrl), null);
+            if (invoke instanceof Map) {
+                response.getWriter().println(JSONObject.parseObject(JSON.toJSONString(invoke)));
+            } else if (invoke instanceof freemarkMap) {
+                //freemark 模板解析
+            } else {
+                response.getWriter().println(invoke);
+            }
+            System.out.println("invoke:" + invoke);
         }
     }
 
@@ -133,7 +146,7 @@ public class MyDispatcherServlet extends HttpServlet {
 //                        }
                         method.setAccessible(true);
                         methodMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), method);
-                        handlerMappingMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), classInstance)
+                        handlerMappingMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), entry.getValue())
                         ;
                     }
                 }
