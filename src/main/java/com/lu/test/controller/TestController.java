@@ -5,7 +5,7 @@ import com.lu.mvc.annotation.MyController;
 import com.lu.mvc.annotation.MyRequestMapping;
 import com.lu.test.service.TestService;
 
-@MyController("TestController1111111")
+@MyController
 @MyRequestMapping("test")
 public class TestController {
 
