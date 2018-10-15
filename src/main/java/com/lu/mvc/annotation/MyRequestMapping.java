@@ -11,4 +11,6 @@ public @interface MyRequestMapping {
      * 表示访问该方法的url
      */
     String value() default "";
+
+    RequestMethod[] method() default {};
 }
