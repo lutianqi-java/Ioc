@@ -71,8 +71,35 @@ public class MyDispatcherServlet extends HttpServlet {
         if (methodMap.containsKey(requestUrl)) {
             Method method = methodMap.get(requestUrl);
 
+            // 获取方法的参数列表
             Class<?>[] parameterTypes = method.getParameterTypes();
 
+            // 获取请求的参数
+            Map<String, String[]> parameterMap = request.getParameterMap();
+
+            // 保存参数值
+            Object[] paramValues = new Object[parameterTypes.length];
+
+            // 方法的参数列表
+            for (int i = 0; i < parameterTypes.length; i++) {
+                // 根据参数名称，做某些处理
+                String requestParam = parameterTypes[i].getSimpleName();
+                if (requestParam.equals("HttpServletRequest")) {
+                    // 参数类型已明确，这边强转类型
+                    paramValues[i] = request;
+                    continue;
+                }
+                if (requestParam.equals("HttpServletResponse")) {
+                    paramValues[i] = response;
+                    continue;
+                }
+                if (requestParam.equals("String")) {
+                    for (Map.Entry<String, String[]> param : parameterMap.entrySet()) {
+                        String value = Arrays.toString(param.getValue()).replaceAll("\\[|\\]", "").replaceAll(",\\s", ",");
+                        paramValues[i] = value;
+                    }
+                }
+            }
 
             Object invoke = method.invoke(handlerMappingMap.get(requestUrl), null);
             if (invoke instanceof Map) {
