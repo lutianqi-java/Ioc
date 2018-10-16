@@ -20,12 +20,11 @@ public class FreemarkResolve {
     public void create(Map<String, Object> dataMap, String path, String fileName, HttpServletResponse response) throws IOException {
         // dataMap 要填入模本的数据文件
         // 设置模本装置方法和路径,FreeMarker支持多种模板装载方法。可以重servlet，classpath，数据库装载，
-        // 这里我们的模板是放在com.havenliu.document.template包下面
         configuration.setDirectoryForTemplateLoading(new File(path));
         Template t = null;
         try {
             // test.ftl为要装载的模板
-            t = configuration.getTemplate("index.ftl");
+            t = configuration.getTemplate(fileName + ".ftl");
         } catch (IOException e) {
             e.printStackTrace();
         }
