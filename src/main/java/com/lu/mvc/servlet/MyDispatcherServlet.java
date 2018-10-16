@@ -6,7 +6,8 @@ import com.lu.mvc.annotation.MyAutowired;
 import com.lu.mvc.annotation.MyController;
 import com.lu.mvc.annotation.MyRequestMapping;
 import com.lu.mvc.annotation.MyService;
-import com.lu.mvc.core.freemarkMap;
+import com.lu.mvc.core.FreemarkMap;
+import com.lu.mvc.freemark.FreemarkResolve;
 import com.lu.test.service.TestService;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -41,6 +42,11 @@ public class MyDispatcherServlet extends HttpServlet {
     private Map<String, Method> methodMap = new HashMap<>();
 
     /**
+     * 模板路径
+     */
+    private String view_path = "";
+
+    /**
      * 加载的类及类实例
      */
     private Map<String, Object> classMap = new HashMap<>();
@@ -50,6 +56,8 @@ public class MyDispatcherServlet extends HttpServlet {
      * 请求路径对应class 实例映射
      */
     private Map<String, Object> handlerMappingMap = new HashMap<>();
+
+    FreemarkResolve freemarkResolve = new FreemarkResolve();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -101,11 +109,15 @@ public class MyDispatcherServlet extends HttpServlet {
                 }
             }
 
-            Object invoke = method.invoke(handlerMappingMap.get(requestUrl), null);
+            Object invoke = method.invoke(handlerMappingMap.get(requestUrl), paramValues);
             if (invoke instanceof Map) {
                 response.getWriter().println(JSONObject.parseObject(JSON.toJSONString(invoke)));
-            } else if (invoke instanceof freemarkMap) {
+            } else if (invoke instanceof FreemarkMap) {
                 //freemark 模板解析
+                FreemarkMap freemarkMap = (FreemarkMap) invoke;
+                String fileName = freemarkMap.getPath();
+                Map<String, Object> dataMap = freemarkMap.getMap();
+                freemarkResolve.create(dataMap, view_path, fileName, response);
             } else {
                 response.getWriter().println(invoke);
             }
@@ -128,7 +140,7 @@ public class MyDispatcherServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        System.out.print("加载");
+        System.out.println("加载" + config.getServletContext().getRealPath("/"));
         // 1.加载配置文件
         try {
             doLoadConfig(config.getInitParameter("contextConfigLocation"));
@@ -137,6 +149,7 @@ public class MyDispatcherServlet extends HttpServlet {
             doInstance();//反射类
             ico(); //注入
             initHandlerMapping();//解析路径
+            view_path = config.getServletContext().getRealPath("/") + properties.get("view").toString();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -173,8 +186,7 @@ public class MyDispatcherServlet extends HttpServlet {
 //                        }
                         method.setAccessible(true);
                         methodMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), method);
-                        handlerMappingMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), entry.getValue())
-                        ;
+                        handlerMappingMap.put("/" + firstUrl.replace("/", "") + "/" + secondUrl.replace("/", ""), entry.getValue());
                     }
                 }
             }

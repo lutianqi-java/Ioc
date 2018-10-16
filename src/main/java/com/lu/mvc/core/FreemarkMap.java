@@ -2,7 +2,7 @@ package com.lu.mvc.core;
 
 import java.util.Map;
 
-public class freemarkMap {
+public class FreemarkMap {
 
     private String path;
 
